@@ -15,16 +15,18 @@
  */
 package org.springframework.social.odnoklassniki.api.impl;
 
-import org.codehaus.jackson.map.ObjectMapper;
+import java.util.LinkedList;
+import java.util.List;
+
 import org.springframework.http.MediaType;
 import org.springframework.http.converter.HttpMessageConverter;
-import org.springframework.http.converter.json.MappingJacksonHttpMessageConverter;
+import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.social.oauth2.AbstractOAuth2ApiBinding;
 import org.springframework.social.odnoklassniki.api.Odnoklassniki;
 import org.springframework.social.odnoklassniki.api.OdnoklassnikiErrorHandler;
 import org.springframework.social.odnoklassniki.api.UsersOperations;
-import java.util.LinkedList;
-import java.util.List;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
  * Odnoklassniki template
@@ -54,24 +56,24 @@ public class OdnoklassnikiTemplate extends AbstractOAuth2ApiBinding implements O
         initSubApis();
     }
 
+    private void initSubApis() {
+        usersOperations = new UsersTemplate(applicationKey, clientSecret, getRestTemplate(), accessToken, isAuthorized());
+    }
+
     private void registerJsonModule() {
         List<HttpMessageConverter<?>> converters = getRestTemplate().getMessageConverters();
         for (HttpMessageConverter<?> converter : converters) {
-            if (converter instanceof MappingJacksonHttpMessageConverter) {
-                MappingJacksonHttpMessageConverter jsonConverter = (MappingJacksonHttpMessageConverter) converter;
+            if (converter instanceof MappingJackson2HttpMessageConverter) {
+            	MappingJackson2HttpMessageConverter jsonConverter = (MappingJackson2HttpMessageConverter) converter;
 
                 List<MediaType> mTypes = new LinkedList<MediaType>(jsonConverter.getSupportedMediaTypes());
-                mTypes.add(new MediaType("text", "javascript", MappingJacksonHttpMessageConverter.DEFAULT_CHARSET));
+                mTypes.add(new MediaType("text", "javascript", MappingJackson2HttpMessageConverter.DEFAULT_CHARSET));
                 jsonConverter.setSupportedMediaTypes(mTypes);
 
                 ObjectMapper objectMapper = new ObjectMapper();
                 jsonConverter.setObjectMapper(objectMapper);
             }
         }
-    }
-
-    private void initSubApis() {
-        usersOperations = new UsersTemplate(applicationKey, clientSecret, getRestTemplate(), accessToken, isAuthorized());
     }
 
     @Override
